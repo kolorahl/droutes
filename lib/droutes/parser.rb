@@ -1,13 +1,31 @@
 module Droutes
-  class Struct
-    attr_reader :controller, :action, :verb, :path, :docs
+  class ClassStruct
+    attr_reader :controller, :actions, :children
 
-    def initialize(controller, action, route, docs)
+    def initialize(controller)
       @controller = controller
+      @actions = {}
+      @children = []
+    end
+
+    def set_action(action, data)
+      @actions[action] = data
+    end
+  end
+
+  class Struct
+    attr_reader :klass, :action, :verb, :path, :docs
+
+    def initialize(klass, action, route, docs)
+      @klass = klass
       @action = action
       @verb = route.verb
       @path = route.path
       @docs = docs
+    end
+
+    def controller
+      @klass.controller
     end
   end
 
@@ -25,41 +43,49 @@ module Droutes
 
     def parse
       files = Dir["#{Rails.application.root}/app/controllers/**/*.rb"]
-      files.collect do |file|
+      root = ClassStruct.new(nil)
+      files.each do |file|
         parser = YARD::Parser::SourceParser.new.parse(file)
-        handle(parser.enumerator)
+        handle(parser.enumerator, root)
       end
+      root
     end
 
     protected
 
-    def handle(ast)
-      ast.collect {|node| handle_class(node) if node.is_a?(YARD::Parser::Ruby::ClassNode)}.compact
+    def handle(ast, klass)
+      data = ::Hash.new {|h, k| h[k] = []}
+      ast.each {|node| handle_class(node, klass) if node.is_a?(YARD::Parser::Ruby::ClassNode)}
     end
 
-    def handle_node(ast)
-      ast.collect do |node|
+    def handle_node(ast, klass)
+      ast.each do |node|
         if node.is_a?(YARD::Parser::Ruby::ClassNode)
-          handle_class(node)
+          handle_class(node, klass)
         elsif node.is_a?(YARD::Parser::Ruby::MethodDefinitionNode)
-          handle_meth(node)
+          handle_def(node, klass)
         elsif node.is_a?(YARD::Parser::Ruby::AstNode)
-          handle_node(node)
+          handle_node(node, klass)
         end
-      end.compact
+      end
     end
 
-    def handle_class(ast)
-      @controller = ast.class_name.path.join("::").underscore
-      @controller = @controller[0, @controller.length - "_controller".length]
-      handle_node(ast)
+    def handle_class(ast, klass)
+      controller = ast.class_name.path.join("::").underscore
+      controller = controller[0, controller.length - "_controller".length]
+      newKlass = ClassStruct.new(controller)
+      data = handle_node(ast, newKlass)
+      klass.children.append(newKlass) if klass
     end
 
-    def handle_meth(ast)
+    def handle_def(ast, klass)
       action = ast.method_name(true).to_s
-      route = @routes[@controller][action]
+      route = @routes[klass.controller][action]
       return unless route
-      Struct.new(@controller, action, route, YARD::Docstring.new(ast.docstring))
+      klass.set_action(action, Struct.new(klass,
+                                          action,
+                                          route,
+                                          YARD::Docstring.new(ast.docstring)))
     end
   end
 end
