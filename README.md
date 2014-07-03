@@ -39,7 +39,7 @@ that all the routing data is available. Without the routing data, the document
 generator would not be able to gain information such as request method
 (e.g. POST) or path (e.g. /posts/:id).
 
-    rails g droutes
+    rails g droutes:documentation
 
 That's it. This will generate a folder `.droutes` that contains HTML
 output. Each controller gets its own HTML file, and the index contains a sorted

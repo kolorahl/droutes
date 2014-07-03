@@ -1,11 +1,16 @@
 module Droutes
   class ClassStruct
-    attr_reader :controller, :actions, :children
+    attr_reader :name, :controller, :actions, :children, :docs
 
-    def initialize(controller)
-      @controller = controller
+    def initialize(class_name, docs="")
+      @name = class_name
+      if class_name
+        controller = class_name.underscore
+        @controller = controller[0, controller.length - "_controller".length]
+      end
       @actions = {}
       @children = []
+      @docs = docs || ""
     end
 
     def set_action(action, data)
@@ -71,9 +76,8 @@ module Droutes
     end
 
     def handle_class(ast, klass)
-      controller = ast.class_name.path.join("::").underscore
-      controller = controller[0, controller.length - "_controller".length]
-      newKlass = ClassStruct.new(controller)
+      class_name = ast.class_name.path.join("::")
+      newKlass = ClassStruct.new(class_name, ast.docstring)
       data = handle_node(ast, newKlass)
       klass.children.append(newKlass) if klass
     end
