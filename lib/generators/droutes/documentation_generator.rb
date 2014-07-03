@@ -6,6 +6,7 @@ module Droutes::Generators
     def create_docs
       root = Droutes::Parser.new(Rails.application.routes.routes).parse
       root.children.each do |klass|
+        next if klass.actions.empty?
         content = class_doc(klass)
         create_file(".droutes/#{klass.controller}.html", page_wrapper(klass.controller.camelcase, content))
       end
