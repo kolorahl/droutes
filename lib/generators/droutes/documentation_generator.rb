@@ -5,11 +5,13 @@ module Droutes::Generators
     desc "Parse application routes and create REST API documentation."
     def create_docs
       root = Droutes::Parser.new(Rails.application.routes.routes).parse
+      @paths = {}
       root.children.each do |klass|
         next if klass.actions.empty?
         content = class_doc(klass)
         create_file(".droutes/#{klass.controller}.html", page_wrapper(klass.controller.camelcase, content))
       end
+      create_file(".droutes/index.html", index_page)
     end
 
     protected
@@ -19,6 +21,27 @@ module Droutes::Generators
     end
 
     private
+
+    def index_page
+      <<HTML
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Route Index</title>
+        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    </head>
+
+    <body>
+      <p>All available routes (sorted by name):</p>
+      <ul>
+#{@paths.keys.sort.collect {|p| "        <li><a href=\"/#{@paths[p][:controller]}.html##{@paths[p][:id]}\">#{p}</a></li>"}.join("\n")}
+      </ul>
+    </body>
+</html>
+HTML
+    end
 
     def page_wrapper(title, content)
       <<HTML
@@ -54,6 +77,7 @@ DOC
     end
 
     def action_doc(struct)
+      @paths[struct.path] = {controller: struct.controller, id: action_id(struct)}
       <<DOC
 <div id="#{action_id(struct)}" class="action panel panel-default">
     <div class="panel-heading">
