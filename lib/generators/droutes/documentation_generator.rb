@@ -4,10 +4,9 @@ module Droutes::Generators
 
     desc "Parse application routes and create REST API documentation."
     def create_docs
-      root = Droutes::Parser.new(Rails.application.routes.routes).parse
-      @paths = {}
-      root.children.each do |klass|
-        next if klass.actions.empty?
+      @root = Droutes::Parser.new(Rails.application.routes.routes).parse
+      @root.children.each do |klass|
+        next if klass.paths.empty?
         content = class_doc(klass)
         create_file(".droutes/#{klass.controller}.html", page_wrapper(klass.controller.camelcase, content))
       end
@@ -36,7 +35,12 @@ module Droutes::Generators
     <body>
       <p>All available routes (sorted by name):</p>
       <ul>
-#{@paths.keys.sort.collect {|p| "        <li><a href=\"/#{@paths[p][:controller]}.html##{@paths[p][:id]}\">#{p}</a></li>"}.join("\n")}
+#{@root.children.collect do |node|
+    node.paths.collect do |path, actions|
+      struct = actions.values.first
+      "        <li><a href=\"/#{struct.controller}.html##{action_id(struct)}\">#{path}</a></li>"
+    end.join("\n")
+  end.join("")}
       </ul>
     </body>
 </html>
@@ -65,23 +69,35 @@ HTML
     end
 
     def class_doc(klass)
+      structs = []
+      klass.paths.keys.sort.each {|path| structs += klass.paths[path].values}
       <<DOC
 <div class="container-fluid">
     <h1>#{klass.controller} API</h1>
     <div id="#{klass.controller}" class="controller">
         <p class="summary">#{klass.docs.gsub(/\n/, " ")}</p>
-#{klass.actions.collect {|action, struct| action_doc(struct)}.join("\n")}
+        <div class="toc">
+          <h3>Routes</h3>
+          <dl>
+#{structs.collect do |struct|
+    "            <dt><a href=\"##{action_id(struct)}\">#{struct.verb} #{struct.path}</a></dt><dd>#{struct.docs.summary}</dd>"
+  end.join("\n")}
+          </dl>
+        </div>
+        <div class="routes">
+          <h3>Documentation</h3>
+#{structs.collect {|struct| action_doc(struct)}.join("\n")}
+        </div>
     </div>
 </div>
 DOC
     end
 
     def action_doc(struct)
-      @paths[struct.path] = {controller: struct.controller, id: action_id(struct)}
       <<DOC
 <div id="#{action_id(struct)}" class="action panel panel-default">
     <div class="panel-heading">
-        <h2 class="route panel-title"><code>#{struct.path}</code> <small>#{struct.verb}</small></h2>
+        <h2 class="route panel-title"><code>#{struct.verb} #{struct.path}</code> <small>#{struct.action}</small></h2>
     </div>
     <div class="comments panel-body">
 #{comments_doc(struct.docs)}

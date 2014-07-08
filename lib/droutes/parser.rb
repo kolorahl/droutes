@@ -1,6 +1,6 @@
 module Droutes
   class ClassStruct
-    attr_reader :name, :controller, :actions, :children, :docs
+    attr_reader :name, :controller, :paths, :children, :docs
 
     def initialize(class_name, docs="")
       @name = class_name
@@ -8,13 +8,13 @@ module Droutes
         controller = class_name.underscore
         @controller = controller[0, controller.length - "_controller".length]
       end
-      @actions = {}
+      @paths = ::Hash.new { |h, k| h[k] = {} }
       @children = []
       @docs = docs || ""
     end
 
-    def set_action(action, data)
-      @actions[action] = data
+    def add_to_path(struct)
+      @paths[struct.path][struct.action] = struct
     end
   end
 
@@ -77,6 +77,7 @@ module Droutes
     def handle_class(ast, klass)
       class_name = ast.class_name.path.join("::")
       newKlass = ClassStruct.new(class_name, ast.docstring)
+      handle_node(ast, newKlass)
       klass.children.append(newKlass) if klass
     end
 
@@ -84,10 +85,10 @@ module Droutes
       action = ast.method_name(true).to_s
       route = @routes[klass.controller][action]
       return unless route
-      klass.set_action(action, Struct.new(klass,
-                                          action,
-                                          route,
-                                          YARD::Docstring.new(ast.docstring)))
+      klass.add_to_path(Struct.new(klass,
+                                   action,
+                                   route,
+                                   YARD::Docstring.new(ast.docstring)))
     end
   end
 end
