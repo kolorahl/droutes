@@ -67,7 +67,7 @@ HTML
     def class_doc(klass)
       <<DOC
 <div class="container-fluid">
-    <h1>#{klass.controller.capitalize} API</h1>
+    <h1>#{klass.controller} API</h1>
     <div id="#{klass.controller}" class="controller">
         <p class="summary">#{klass.docs.gsub(/\n/, " ")}</p>
 #{klass.actions.collect {|action, struct| action_doc(struct)}.join("\n")}
