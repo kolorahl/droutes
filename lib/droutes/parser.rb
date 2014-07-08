@@ -59,7 +59,6 @@ module Droutes
     protected
 
     def handle(ast, klass)
-      data = ::Hash.new {|h, k| h[k] = []}
       ast.each {|node| handle_class(node, klass) if node.is_a?(YARD::Parser::Ruby::ClassNode)}
     end
 
@@ -78,7 +77,6 @@ module Droutes
     def handle_class(ast, klass)
       class_name = ast.class_name.path.join("::")
       newKlass = ClassStruct.new(class_name, ast.docstring)
-      data = handle_node(ast, newKlass)
       klass.children.append(newKlass) if klass
     end
 
