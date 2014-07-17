@@ -38,7 +38,7 @@ module Droutes::Generators
 #{@root.children.collect do |node|
     node.paths.collect do |path, actions|
       struct = actions.values.first
-      "        <li><a href=\"/#{struct.controller}.html##{action_id(struct)}\">#{path}</a></li>"
+      "        <li><a href=\"#{struct.controller}.html##{action_id(struct)}\">#{path}</a></li>"
     end.join("\n")
   end.join("")}
       </ul>
