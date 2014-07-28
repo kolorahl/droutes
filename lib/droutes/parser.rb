@@ -25,7 +25,7 @@ module Droutes
       @klass = klass
       @action = action
       @verb = route.verb
-      @path = route.path
+      @path = route.path.sub(/\(.:format\)/, "")
       @docs = docs
     end
 
