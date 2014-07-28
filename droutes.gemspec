@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = "droutes"
-  s.version     = "0.0.6"
-  s.date        = "2014-07-17"
+  s.version     = "0.0.7"
+  s.date        = "2014-07-27"
   s.summary     = "Ruby REST documentation generator for client integration."
   s.description = "Generating documentation for REST endpoints for client developers can be a pain, but droutes can make it easy."
   s.authors     = ["Tyler Margison"]
