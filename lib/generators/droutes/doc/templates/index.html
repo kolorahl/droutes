@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= Rails.application.class.parent_name %> :: Route Index</title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <h1><%= Rails.application.class.parent_name %> :: Route Index</h1>
+        <p>
+          Below is a collection of controllers and their paths. Some paths may
+          have multiple verbs associated with it (like a call that accepts both
+          GET and POST requests).
+        </p>
+        <div class="col-xs-8 col-offset-xs-2">
+          <% @root.children.each do |klass| %>
+          <h3>
+            <a href="<%= klass.controller %>.html">
+              <%= klass.controller.camelize %>
+            </a>
+          </h3>
+          <ul>
+            <% klass.paths.each do |path, actions| %>
+            <% struct = actions.values.first %>
+            <li>
+              <a href="<%= klass.controller %>.html#<%= struct.action %>">
+                <%= path %>
+              </a>
+            </li>
+            <% end %>
+          </ul>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </body>
+</head>

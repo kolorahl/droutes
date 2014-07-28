@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title><%= Rails.application.class.parent_name %> :: <%= @klass.controller %></title>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-10 col-offset-xs-1">
+          <h1><%= @klass.controller.camelize %> API</h1>
+          <h4>Return to index</h4>
+
+          <div class="api">
+
+            <p class="summary">
+              <%= @klass.docs.gsub(/\n/, " ") %>
+            </p>
+
+            <div class="toc">
+              <h3>Routes</h3>
+              <% structs = @klass.paths.keys.sort.collect {|key| @klass.paths[key].values}.flatten %>
+              <dl>
+                <% structs.each do |struct| %>
+                <dt>
+                  <a href="<%= struct.action %>">
+                    <%= "#{struct.verb} #{struct.path}" %>
+                  </a>
+                </dt>
+                <dd><%= struct.docs.summary %></dd>
+                <% end %>
+              </dl>
+            </div>
+
+            <div class="routes">
+              <h3>Documentation</h3>
+              <% structs.each do |struct| %>
+              <div class="route panel panel-default">
+                <div class="panel-heading">
+                  <h2 class="panel-title">
+                    <code><%= "#{struct.verb} #{struct.path}" %></code> <small><%= struct.action %></small>
+                  </h2>
+                </div>
+                <div class="panel-body">
+                  <p class="summary"><%= struct.docs.summary %></p>
+                  <dl class="dl-horizontal">
+                    <% struct.docs.tags("param").each do |param| %>
+                    <dt><%= param.name %></dt>
+                    <dd>[<%= param.types.join("|") %>] <%= param.text %></dd>
+                    <% end %>
+                    <% ret = struct.docs.tags("return").first %>
+                    <% if ret %>
+                    <dt>[return]</dt>
+                    <dd>[<%= ret.types.join("|") %>] <%= ret.text %></dd>
+                    <% end %>
+                  </dl>
+                  <% eg_json = example_json(struct.docs.tags("param")) %>
+                  <% unless eg_json.blank? %>
+                  <div><%= eg_json %></div>
+                  <% end %>
+                </div>
+              </div>
+              <% end %>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

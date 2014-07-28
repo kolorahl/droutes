@@ -11,7 +11,9 @@ Gem::Specification.new do |s|
                    "Gemfile", "Gemfile.lock",
                    "lib/droutes.rb",
                    "lib/droutes/parser.rb",
-                   "lib/generators/droutes/documentation_generator.rb"]
+                   "lib/generators/droutes/doc/doc_generator.rb",
+                   "lib/generators/droutes/doc/templates/index.html",
+                   "lib/generators/droutes/doc/templates/controller.html"]
   s.homepage    = "https://github.com/kolorahl/droutes"
   s.license     = "GPLv3"
 end
